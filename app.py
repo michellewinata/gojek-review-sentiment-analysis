@@ -266,11 +266,13 @@ def predict_sentiment(text, model, tfidf):
 @st.cache_resource
 def load_and_train():
     try:
+        gdown.download('https://drive.google.com/file/d/1zWjvbR4WBEMZ7Gipz9nbQ26cSLuW8hi3', 'dataset2_gojek.csv', quiet=True)
         df1 = pd.read_csv('dataset1_gojek.csv').dropna().drop_duplicates()
         df1['clean_review'] = df1['review'].apply(clean_text)
         df1['processed_review'] = df1['clean_review'].apply(preprocess_text)
         df1['label'] = df1['rate'].map({'positive': 1, 'negative': 0})
-
+        
+        gdown.download('https://drive.google.com/uc?id=1URNmAxxjCzuYvRDnl6FLOtNbjZ9uIS2R', 'dataset2_gojek.csv', quiet=True)
         df2 = pd.read_csv('dataset2_gojek.csv')
         df2.columns = df2.columns.str.strip()
         df2 = df2.dropna().drop_duplicates()
