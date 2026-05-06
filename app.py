@@ -5,6 +5,8 @@ import string
 import nltk
 import matplotlib.pyplot as plt
 import numpy as np
+import os
+import gdown
 from nltk.corpus import stopwords
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -265,28 +267,26 @@ def predict_sentiment(text, model, tfidf):
 
 @st.cache_data
 def load_and_train():
+    @st.cache_data
+def load_and_train():
     try:
         # DATASET 1
-        file_id_1 = "1zWjvbR4WBEMZ7Gipz9nbQ26cSLuW8hi3"
         path1 = "dataset1_gojek.csv"
-
         if not os.path.exists(path1):
             url1 = "https://drive.google.com/uc?export=download&id=1zWjvbR4WBEMZ7Gipz9nbQ26cSLuW8hi3"
             gdown.download(url1, path1, quiet=False)
-
         if not os.path.exists(path1):
             raise Exception("Dataset 1 gagal didownload!")
+        df1 = pd.read_csv(path1)
 
         # DATASET 2
-        file_id_2 = "1URNmAxxjCzuYvRDnl6FLOtNbjZ9uIS2R"
         path2 = "dataset2_gojek.csv"
-
         if not os.path.exists(path2):
             url2 = "https://drive.google.com/uc?export=download&id=1URNmAxxjCzuYvRDnl6FLOtNbjZ9uIS2R"
             gdown.download(url2, path2, quiet=False)
-
         if not os.path.exists(path2):
             raise Exception("Dataset 2 gagal didownload!")
+        df2 = pd.read_csv(path2)
 
         results = {}
         for name, df, text_col in [("Dataset 1", df1, 'processed_review'), ("Dataset 2", df2, 'processed_review')]:
