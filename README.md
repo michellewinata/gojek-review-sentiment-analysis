@@ -1,18 +1,33 @@
-📌 Deskripsi
-Proyek ini menganalisis sentimen ulasan pengguna aplikasi Gojek menggunakan Natural Language Processing (NLP). Fokus utama proyek adalah membandingkan performa model pada dua dataset dengan karakteristik berbeda (dataset kecil berlabel vs dataset besar tanpa label).
+# 📱 Gojek Review Sentiment Analysis
 
-🎯 Tujuan
-- Klasifikasi sentimen (positif & negatif)
-- Membandingkan performa model
-- Melihat pengaruh ukuran & labeling data
+## 📌 Deskripsi
+Proyek ini menganalisis sentimen ulasan pengguna aplikasi Gojek menggunakan **Natural Language Processing (NLP)**.  
+Fokus utama proyek adalah membandingkan performa model pada dua dataset dengan karakteristik berbeda (dataset kecil berlabel vs dataset besar tanpa label).
 
-📊 Dataset
-Dataset 1: ±1.780 data (sudah berlabel)
-     link: https://www.kaggle.com/datasets/yundarastaandini/gojek-review
-Dataset 2: ±210.000 data (label dari rating)
-     link: https://www.kaggle.com/datasets/ucupsedaya/gojek-app-reviews-bahasa-indonesia
+---
 
-🚀 Cara Menjalankan
+## 🎯 Tujuan
+- Klasifikasi sentimen (positif & negatif)  
+- Membandingkan performa model  
+- Melihat pengaruh ukuran & pelabelan data  
+
+---
+
+## 📊 Dataset
+
+**Dataset 1 – Gojek Review**  
+- ±1.780 data (sudah berlabel)  
+- 🔗 https://www.kaggle.com/datasets/yundarastaandini/gojek-review  
+
+**Dataset 2 – Gojek App Reviews (Bahasa Indonesia)**  
+- ±210.000 data (label dari rating)  
+- 🔗 https://www.kaggle.com/datasets/ucupsedaya/gojek-app-reviews-bahasa-indonesia  
+
+---
+
+## 🚀 Clone
+
+```bash
 git clone https://github.com/username/gojek-sentiment-analysis.git
 cd gojek-sentiment-analysis
 pip install -r requirements.txt
