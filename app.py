@@ -263,19 +263,33 @@ def predict_sentiment(text, model, tfidf):
     pred = model.predict(vect)[0]
     return "positive" if pred == 1 else "negative"
 
-@st.cache_resource
+@st.cache_data
 def load_and_train():
     try:
-        gdown.download('https://drive.google.com/file/d/1zWjvbR4WBEMZ7Gipz9nbQ26cSLuW8hi3', 'dataset2_gojek.csv', quiet=True)
-        df1 = pd.read_csv('dataset1_gojek.csv').dropna().drop_duplicates()
+        # DATASET 1
+        file_id_1 = "1zWjvbR4WBEMZ7Gipz9nbQ26cSLuW8hi3"
+        path1 = "dataset1_gojek.csv"
+
+        if not os.path.exists(path1):
+            url1 = f"https://drive.google.com/uc?id={file_id_1}"
+            gdown.download(url1, path1, quiet=False, fuzzy=True)
+
+        df1 = pd.read_csv(path1).dropna().drop_duplicates()
         df1['clean_review'] = df1['review'].apply(clean_text)
         df1['processed_review'] = df1['clean_review'].apply(preprocess_text)
         df1['label'] = df1['rate'].map({'positive': 1, 'negative': 0})
-        
-        gdown.download('https://drive.google.com/uc?id=1URNmAxxjCzuYvRDnl6FLOtNbjZ9uIS2R', 'dataset2_gojek.csv', quiet=True)
-        df2 = pd.read_csv('dataset2_gojek.csv')
+
+        # DATASET 2
+        file_id_2 = "1URNmAxxjCzuYvRDnl6FLOtNbjZ9uIS2R"
+        path2 = "dataset2_gojek.csv"
+
+        if not os.path.exists(path2):
+            url2 = f"https://drive.google.com/uc?id={file_id_2}"
+            gdown.download(url2, path2, quiet=False, fuzzy=True)
+
+        df2 = pd.read_csv(path2)
         df2.columns = df2.columns.str.strip()
-        df2 = df2.dropna().drop_duplicates()
+
         df2 = df2[df2['score'] != 3]
         df2['label'] = df2['score'].apply(lambda x: 0 if x <= 2 else 1)
         df2['clean_review'] = df2['content'].apply(clean_text)
@@ -319,10 +333,12 @@ def load_and_train():
                     }
                 }
             }
+
         return results, None
+
     except Exception as e:
         return None, str(e)
-
+        
 # HERO 
 st.markdown("""
 <div class="hero">
