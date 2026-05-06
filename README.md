@@ -25,6 +25,12 @@ Fokus utama proyek adalah membandingkan performa model pada dua dataset dengan k
 
 ---
 
+## 🌐 Demo Aplikasi
+Coba langsung di sini:  
+👉 https://gojek-review-sentiment-analysis.streamlit.app/
+
+---
+
 ## 🚀 Clone
 
 ```bash
@@ -32,3 +38,4 @@ git clone https://github.com/username/gojek-sentiment-analysis.git
 cd gojek-sentiment-analysis
 pip install -r requirements.txt
 streamlit run app.py
+```
