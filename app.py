@@ -270,15 +270,12 @@ def download_from_gdrive(file_id, dest_path):
     session = requests.Session()
     url = "https://drive.google.com/uc?export=download"
     
-    # Step 1: ambil confirm token
     response = session.get(url, params={"id": file_id}, stream=True)
     token = None
     for key, value in response.cookies.items():
         if key.startswith("download_warning"):
             token = value
             break
-    
-    # Step 2: download dengan token kalau ada
     if token:
         response = session.get(url, params={"id": file_id, "confirm": token}, stream=True)
     
@@ -357,7 +354,7 @@ with st.spinner("Training models..."):
     results, error = load_and_train()
 
 if error:
-    st.error("Error loading datasets!")
+    st.error(f"Error: {error}")
     st.stop()
 
 # TABS 
