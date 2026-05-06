@@ -298,6 +298,10 @@ def load_and_train():
         df1 = pd.read_csv(path1)
         df2 = pd.read_csv(path2)
 
+        st.write("Kolom df1:", df1.columns.tolist())
+        st.write("Kolom df2:", df2.columns.tolist())
+        st.stop()
+
         results = {}
         for name, df, text_col in [("Dataset 1", df1, 'processed_review'), ("Dataset 2", df2, 'processed_review')]:
             X = df[text_col]
