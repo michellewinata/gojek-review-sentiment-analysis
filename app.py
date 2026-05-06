@@ -298,9 +298,21 @@ def load_and_train():
         df1 = pd.read_csv(path1)
         df2 = pd.read_csv(path2)
 
-        st.write("Kolom df1:", df1.columns.tolist())
-        st.write("Kolom df2:", df2.columns.tolist())
-        st.stop()
+        # PREPROCESS DATASET 1
+        df1 = df1[['review', 'rate']].dropna()
+        df1.columns = ['text', 'rating']
+        df1['rating'] = pd.to_numeric(df1['rating'], errors='coerce')
+        df1 = df1.dropna(subset=['rating'])
+        df1['label'] = df1['rating'].apply(lambda x: 1 if x >= 4 else 0)
+        df1['processed_review'] = df1['text'].apply(lambda x: preprocess_text(clean_text(x)))
+
+        # PREPROCESS DATASET 2
+        df2 = df2[['content', 'score']].dropna()
+        df2.columns = ['text', 'rating']
+        df2['rating'] = pd.to_numeric(df2['rating'], errors='coerce')
+        df2 = df2.dropna(subset=['rating'])
+        df2['label'] = df2['rating'].apply(lambda x: 1 if x >= 4 else 0)
+        df2['processed_review'] = df2['text'].apply(lambda x: preprocess_text(clean_text(x)))
 
         results = {}
         for name, df, text_col in [("Dataset 1", df1, 'processed_review'), ("Dataset 2", df2, 'processed_review')]:
