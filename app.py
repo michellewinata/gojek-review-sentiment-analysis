@@ -267,8 +267,6 @@ def predict_sentiment(text, model, tfidf):
 
 @st.cache_data
 def load_and_train():
-    @st.cache_data
-def load_and_train():
     try:
         # DATASET 1
         path1 = "dataset1_gojek.csv"
