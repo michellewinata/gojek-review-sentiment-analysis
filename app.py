@@ -298,15 +298,13 @@ def load_and_train():
         df1 = pd.read_csv(path1)
         df2 = pd.read_csv(path2)
 
-        # PREPROCESS DATASET 1
+        # PREPROCESSING DATASET 1
         df1 = df1[['review', 'rate']].dropna()
         df1.columns = ['text', 'rating']
-        df1['rating'] = pd.to_numeric(df1['rating'], errors='coerce')
-        df1 = df1.dropna(subset=['rating'])
-        df1['label'] = df1['rating'].apply(lambda x: 1 if x >= 4 else 0)
+        df1['label'] = df1['rating'].apply(lambda x: 1 if str(x).strip().lower() == 'positive' else 0)
         df1['processed_review'] = df1['text'].apply(lambda x: preprocess_text(clean_text(x)))
 
-        # PREPROCESS DATASET 2
+        # PREPROCESSING DATASET 2
         df2 = df2[['content', 'score']].dropna()
         df2.columns = ['text', 'rating']
         df2['rating'] = pd.to_numeric(df2['rating'], errors='coerce')
@@ -316,10 +314,6 @@ def load_and_train():
 
         df1 = df1[df1['processed_review'].str.strip() != '']
         df2 = df2[df2['processed_review'].str.strip() != '']
-
-        st.write("df1 shape:", df1.shape, "label counts:", df1['label'].value_counts().to_dict())
-        st.write("df2 shape:", df2.shape, "label counts:", df2['label'].value_counts().to_dict())
-        st.stop()
         
         results = {}
         for name, df, text_col in [("Dataset 1", df1, 'processed_review'), ("Dataset 2", df2, 'processed_review')]:
