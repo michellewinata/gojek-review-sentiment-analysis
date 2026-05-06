@@ -392,7 +392,7 @@ with tab1:
         dataset_choice = st.selectbox("Dataset yang digunakan:", ["Dataset 1", "Dataset 2"])
     with col_btn:
         st.markdown("<br>", unsafe_allow_html=True)
-        predict_btn = st.button("Analisis Sentimen →", use_container_width=True)
+        predict_btn = st.button("Analisis Sentimen  →", use_container_width=True)
 
     if predict_btn and user_input.strip():
         r = results[dataset_choice]
