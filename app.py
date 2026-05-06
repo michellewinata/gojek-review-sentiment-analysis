@@ -314,6 +314,13 @@ def load_and_train():
         df2['label'] = df2['rating'].apply(lambda x: 1 if x >= 4 else 0)
         df2['processed_review'] = df2['text'].apply(lambda x: preprocess_text(clean_text(x)))
 
+        df1 = df1[df1['processed_review'].str.strip() != '']
+        df2 = df2[df2['processed_review'].str.strip() != '']
+
+        st.write("df1 shape:", df1.shape, "label counts:", df1['label'].value_counts().to_dict())
+        st.write("df2 shape:", df2.shape, "label counts:", df2['label'].value_counts().to_dict())
+        st.stop()
+        
         results = {}
         for name, df, text_col in [("Dataset 1", df1, 'processed_review'), ("Dataset 2", df2, 'processed_review')]:
             X = df[text_col]
