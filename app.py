@@ -6,7 +6,8 @@ import nltk
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-import gdown
+import requests
+import io
 from nltk.corpus import stopwords
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -265,30 +266,40 @@ def predict_sentiment(text, model, tfidf):
     pred = model.predict(vect)[0]
     return "positive" if pred == 1 else "negative"
 
+def download_from_gdrive(file_id, dest_path):
+    session = requests.Session()
+    url = "https://drive.google.com/uc?export=download"
+    
+    # Step 1: ambil confirm token
+    response = session.get(url, params={"id": file_id}, stream=True)
+    token = None
+    for key, value in response.cookies.items():
+        if key.startswith("download_warning"):
+            token = value
+            break
+    
+    # Step 2: download dengan token kalau ada
+    if token:
+        response = session.get(url, params={"id": file_id, "confirm": token}, stream=True)
+    
+    with open(dest_path, "wb") as f:
+        for chunk in response.iter_content(32768):
+            if chunk:
+                f.write(chunk)
+
 @st.cache_data
 def load_and_train():
     try:
-        # DATASET 1
-        path1 = "dataset1_gojek.csv"
+        path1 = "/tmp/dataset1_gojek.csv"
+        path2 = "/tmp/dataset2_gojek.csv"
+
         if not os.path.exists(path1):
-            url1 = "https://drive.google.com/uc?export=download&id=1zWjvbR4WBEMZ7Gipz9nbQ26cSLuW8hi3&confirm=t"
-            gdown.download(url1, path1, quiet=False, fuzzy=True)
-        if not os.path.exists(path1):
-            raise Exception("Dataset 1 gagal didownload!")
+            download_from_gdrive("1zWjvbR4WBEMZ7Gipz9nbQ26cSLuW8hi3", path1)
+        if not os.path.exists(path2):
+            download_from_gdrive("1URNmAxxjCzuYvRDnl6FLOtNbjZ9uIS2R", path2)
+
         df1 = pd.read_csv(path1)
-
-        # DATASET 2
-        path2 = "dataset2_gojek.csv"
-        if not os.path.exists(path2):
-            url2 = "https://drive.google.com/uc?export=download&id=1URNmAxxjCzuYvRDnl6FLOtNbjZ9uIS2R&confirm=t"
-            gdown.download(url2, path2, quiet=False, fuzzy=True)
-        if not os.path.exists(path2):
-            raise Exception("Dataset 2 gagal didownload!")
         df2 = pd.read_csv(path2)
-
-        if error:
-            st.error(f"Error loading datasets: {error}")
-            st.stop()
 
         results = {}
         for name, df, text_col in [("Dataset 1", df1, 'processed_review'), ("Dataset 2", df2, 'processed_review')]:
