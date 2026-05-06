@@ -270,23 +270,23 @@ def load_and_train():
         file_id_1 = "1zWjvbR4WBEMZ7Gipz9nbQ26cSLuW8hi3"
         path1 = "dataset1_gojek.csv"
 
-    if not os.path.exists(path1):
-        url1 = f"https://drive.google.com/uc?export=download&id={file_id_1}"
-        gdown.download(url1, path1, quiet=False)
+        if not os.path.exists(path1):
+            url1 = f"https://drive.google.com/uc?export=download&id={file_id_1}"
+            gdown.download(url1, path1, quiet=False)
 
-    if not os.path.exists(path1):
-        raise Exception("Dataset 1 gagal didownload!")
+        if not os.path.exists(path1):
+            raise Exception("Dataset 1 gagal didownload!")
 
-    # DATASET 2
-    file_id_2 = "1URNmAxxjCzuYvRDnl6FLOtNbjZ9uIS2R"
-    path2 = "dataset2_gojek.csv"
+        # DATASET 2
+        file_id_2 = "1URNmAxxjCzuYvRDnl6FLOtNbjZ9uIS2R"
+        path2 = "dataset2_gojek.csv"
 
-    if not os.path.exists(path2):
-        url2 = f"https://drive.google.com/uc?export=download&id={file_id_2}"
-        gdown.download(url2, path2, quiet=False)
+        if not os.path.exists(path2):
+            url2 = f"https://drive.google.com/uc?export=download&id={file_id_2}"
+            gdown.download(url2, path2, quiet=False)
 
-    if not os.path.exists(path2):
-        raise Exception("Dataset 2 gagal didownload!")
+        if not os.path.exists(path2):
+            raise Exception("Dataset 2 gagal didownload!")
 
         results = {}
         for name, df, text_col in [("Dataset 1", df1, 'processed_review'), ("Dataset 2", df2, 'processed_review')]:
