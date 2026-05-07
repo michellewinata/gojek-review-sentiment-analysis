@@ -1,13 +1,12 @@
 import streamlit as st
 import pandas as pd
+import os
 import re
 import string
 import nltk
 import matplotlib.pyplot as plt
 import numpy as np
-import os
-import requests
-import io
+import gdown
 from nltk.corpus import stopwords
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -266,55 +265,38 @@ def predict_sentiment(text, model, tfidf):
     pred = model.predict(vect)[0]
     return "positive" if pred == 1 else "negative"
 
-def download_from_gdrive(file_id, dest_path):
-    session = requests.Session()
-    url = "https://drive.google.com/uc?export=download"
-    
-    response = session.get(url, params={"id": file_id}, stream=True)
-    token = None
-    for key, value in response.cookies.items():
-        if key.startswith("download_warning"):
-            token = value
-            break
-    if token:
-        response = session.get(url, params={"id": file_id, "confirm": token}, stream=True)
-    
-    with open(dest_path, "wb") as f:
-        for chunk in response.iter_content(32768):
-            if chunk:
-                f.write(chunk)
-
 @st.cache_data
 def load_and_train():
     try:
-        path1 = "/tmp/dataset1_gojek.csv"
-        path2 = "/tmp/dataset2_gojek.csv"
+        # DATASET 1
+        file_id_1 = "1zWjvbR4WBEMZ7Gipz9nbQ26cSLuW8hi3"
+        path1 = "dataset1_gojek.csv"
 
         if not os.path.exists(path1):
-            download_from_gdrive("1zWjvbR4WBEMZ7Gipz9nbQ26cSLuW8hi3", path1)
+            url1 = f"https://drive.google.com/uc?id={file_id_1}"
+            gdown.download(url1, path1, quiet=False, fuzzy=True)
+
+        df1 = pd.read_csv(path1).dropna().drop_duplicates()
+        df1['clean_review'] = df1['review'].apply(clean_text)
+        df1['processed_review'] = df1['clean_review'].apply(preprocess_text)
+        df1['label'] = df1['rate'].map({'positive': 1, 'negative': 0})
+
+        # DATASET 2
+        file_id_2 = "1URNmAxxjCzuYvRDnl6FLOtNbjZ9uIS2R"
+        path2 = "dataset2_gojek.csv"
+
         if not os.path.exists(path2):
-            download_from_gdrive("1URNmAxxjCzuYvRDnl6FLOtNbjZ9uIS2R", path2)
+            url2 = f"https://drive.google.com/uc?id={file_id_2}"
+            gdown.download(url2, path2, quiet=False, fuzzy=True)
 
-        df1 = pd.read_csv(path1)
         df2 = pd.read_csv(path2)
+        df2.columns = df2.columns.str.strip()
 
-        # PREPROCESSING DATASET 1
-        df1 = df1[['review', 'rate']].dropna()
-        df1.columns = ['text', 'rating']
-        df1['label'] = df1['rating'].apply(lambda x: 1 if str(x).strip().lower() == 'positive' else 0)
-        df1['processed_review'] = df1['text'].apply(lambda x: preprocess_text(clean_text(x)))
+        df2 = df2[df2['score'] != 3]
+        df2['label'] = df2['score'].apply(lambda x: 0 if x <= 2 else 1)
+        df2['clean_review'] = df2['content'].apply(clean_text)
+        df2['processed_review'] = df2['clean_review'].apply(preprocess_text)
 
-        # PREPROCESSING DATASET 2
-        df2 = df2[['content', 'score']].dropna()
-        df2.columns = ['text', 'rating']
-        df2['rating'] = pd.to_numeric(df2['rating'], errors='coerce')
-        df2 = df2.dropna(subset=['rating'])
-        df2['label'] = df2['rating'].apply(lambda x: 1 if x >= 4 else 0)
-        df2['processed_review'] = df2['text'].apply(lambda x: preprocess_text(clean_text(x)))
-
-        df1 = df1[df1['processed_review'].str.strip() != '']
-        df2 = df2[df2['processed_review'].str.strip() != '']
-        
         results = {}
         for name, df, text_col in [("Dataset 1", df1, 'processed_review'), ("Dataset 2", df2, 'processed_review')]:
             X = df[text_col]
@@ -358,7 +340,7 @@ def load_and_train():
 
     except Exception as e:
         return None, str(e)
-        
+
 # HERO 
 st.markdown("""
 <div class="hero">
@@ -371,7 +353,7 @@ with st.spinner("Training models..."):
     results, error = load_and_train()
 
 if error:
-    st.error(f"Error: {error}")
+    st.error("Error loading datasets!")
     st.stop()
 
 # TABS 
@@ -392,7 +374,7 @@ with tab1:
         dataset_choice = st.selectbox("Dataset yang digunakan:", ["Dataset 1", "Dataset 2"])
     with col_btn:
         st.markdown("<br>", unsafe_allow_html=True)
-        predict_btn = st.button("Analisis Sentimen  →", use_container_width=True)
+        predict_btn = st.button("Analisis Sentimen →", use_container_width=True)
 
     if predict_btn and user_input.strip():
         r = results[dataset_choice]
