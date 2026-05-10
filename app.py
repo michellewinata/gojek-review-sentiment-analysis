@@ -274,7 +274,7 @@ def load_and_train():
 
         if not os.path.exists(path1):
             url1 = f"https://drive.google.com/uc?id={file_id_1}"
-            gdown.download(url1, path1, quiet=False, fuzzy=True)
+            gdown.download(url1, path1, quiet=False)
 
         df1 = pd.read_csv(path1).dropna().drop_duplicates()
         df1['clean_review'] = df1['review'].apply(clean_text)
@@ -287,7 +287,7 @@ def load_and_train():
 
         if not os.path.exists(path2):
             url2 = f"https://drive.google.com/uc?id={file_id_2}"
-            gdown.download(url2, path2, quiet=False, fuzzy=True)
+            gdown.download(url1, path1, quiet=False)
 
         df2 = pd.read_csv(path2)
         df2.columns = df2.columns.str.strip()
