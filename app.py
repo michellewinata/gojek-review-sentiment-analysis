@@ -284,11 +284,11 @@ def load_and_train():
         # DATASET 2
         file_id_2 = "1URNmAxxjCzuYvRDnl6FLOtNbjZ9uIS2R"
         path2 = "dataset2_gojek.csv"
-
+        
         if not os.path.exists(path2):
             url2 = f"https://drive.google.com/uc?id={file_id_2}"
-            gdown.download(url1, path1, quiet=False)
-
+            gdown.download(url2, path2, quiet=False)
+    
         df2 = pd.read_csv(path2)
         df2.columns = df2.columns.str.strip()
 
