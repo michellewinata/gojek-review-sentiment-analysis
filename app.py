@@ -353,7 +353,7 @@ with st.spinner("Training models..."):
     results, error = load_and_train()
 
 if error:
-    st.error("Error loading datasets!")
+    st.error(error)
     st.stop()
 
 # TABS 
