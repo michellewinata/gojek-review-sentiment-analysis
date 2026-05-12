@@ -87,12 +87,12 @@ p, span, label, li, a,
 /* Card */
 .card {
     background: white;
-    border-radius: 16px;
-    padding: 1.5rem;
+    border-radius: 12px;
+    padding: 0.9rem 1rem;
     margin-bottom: 0.3rem;
     box-shadow: 0 2px 12px rgba(0,0,0,0.06);
     border: 1px solid rgba(0,170,91,0.1);
-    min-height: 140px;
+    min-height: 100px;
 }
 
 /* Metric */
@@ -394,9 +394,9 @@ with tab1:
     for i, (label, text) in enumerate(examples):
         with cols[i]:
             st.markdown(f"""
-            <div class="card" style="height:140px;display:flex;flex-direction:column;justify-content:flex-start;">
-                <div style="font-weight:700;margin-bottom:0.5rem;color:#1A1A2E;">{label}</div>
-                <div style="font-size:0.85rem;color:#555;">{text}</div>
+            <div class="card" style="display:flex;flex-direction:column;justify-content:flex-start;">
+                <div style="font-weight:700;font-size:0.8rem;margin-bottom:0.4rem;color:#1A1A2E;">{label}</div>
+                <div style="font-size:0.75rem;color:#555;line-height:1.4;">{text}</div>
             </div>
             """, unsafe_allow_html=True)
 
