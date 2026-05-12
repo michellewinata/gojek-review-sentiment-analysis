@@ -4,17 +4,9 @@ import os
 import re
 import string
 import nltk
-import matplotlib.pyplot as plt
-import numpy as np
+import pickle
 import gdown
 from nltk.corpus import stopwords
-from sklearn.model_selection import train_test_split
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import (
-    accuracy_score, precision_score, recall_score, f1_score
-)
 
 st.set_page_config(
     page_title="Sentiment Analyzer",
@@ -136,6 +128,20 @@ p, span, label, li, a,
     color: #FF6B35 !important;
 }
 
+.metric-value-purple {
+    font-family: 'Space Mono', monospace !important;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #7C3AED !important;
+}
+
+.metric-value-blue {
+    font-family: 'Space Mono', monospace !important;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #0284C7 !important;
+}
+
 /* Predict box */
 .predict-positive {
     background: #E6F7EE;
@@ -145,6 +151,7 @@ p, span, label, li, a,
     text-align: center;
     font-family: 'Plus Jakarta Sans', sans-serif !important;
     color: #00774A !important;
+    margin-bottom: 0.5rem;
 }
 .predict-negative {
     background: #FFF0ED;
@@ -154,6 +161,7 @@ p, span, label, li, a,
     text-align: center;
     font-family: 'Plus Jakarta Sans', sans-serif !important;
     color: #C94A1A !important;
+    margin-bottom: 0.5rem;
 }
 .predict-label {
     font-size: 0.8rem;
@@ -230,7 +238,7 @@ p, span, label, li, a,
 </style>
 """, unsafe_allow_html=True)
 
-# Code
+# ── NLTK Setup ──────────────────────────────────────────────────────────────
 @st.cache_resource
 def setup_nltk():
     nltk.download('stopwords', quiet=True)
@@ -245,6 +253,7 @@ important_words = {
 }
 stop_words = set(stopwords.words('indonesian')) - important_words
 
+# ── Text Preprocessing ───────────────────────────────────────────────────────
 def clean_text(text):
     text = str(text).lower()
     text = re.sub(r'http\S+', '', text)
@@ -265,83 +274,54 @@ def predict_sentiment(text, model, tfidf):
     pred = model.predict(vect)[0]
     return "positive" if pred == 1 else "negative"
 
-@st.cache_data
-def load_and_train():
+# ── Load Pre-trained Models from Google Drive ─────────────────────────────────
+@st.cache_resource
+def load_models():
     try:
-        # DATASET 1
-        file_id_1 = "1zWjvbR4WBEMZ7Gipz9nbQ26cSLuW8hi3"
-        path1 = "dataset1_gojek.csv"
-
+        # Model Dataset 1
+        path1 = "models_ds1.pkl"
         if not os.path.exists(path1):
+            file_id_1 = "1zETgqcVks_f05gFAckpKVm1TLrFEJ2k3"
             url1 = f"https://drive.google.com/uc?id={file_id_1}"
             gdown.download(url1, path1, quiet=False)
 
-        df1 = pd.read_csv(path1).dropna().drop_duplicates()
-        df1['clean_review'] = df1['review'].apply(clean_text)
-        df1['processed_review'] = df1['clean_review'].apply(preprocess_text)
-        df1['label'] = df1['rate'].map({'positive': 1, 'negative': 0})
+        with open(path1, 'rb') as f:
+            m1 = pickle.load(f)
 
-        # DATASET 2
-        file_id_2 = "1URNmAxxjCzuYvRDnl6FLOtNbjZ9uIS2R"
-        path2 = "dataset2_gojek.csv"
-        
+        # Model Dataset 2
+        path2 = "models_ds2.pkl"
         if not os.path.exists(path2):
+            file_id_2 = "1zPVTqSYUSk22Bq9XxfNNUE8Qp_n_lLD-"
             url2 = f"https://drive.google.com/uc?id={file_id_2}"
             gdown.download(url2, path2, quiet=False)
-    
-        df2 = pd.read_csv(path2)
-        df2.columns = df2.columns.str.strip()
 
-        df2 = df2[df2['score'] != 3]
-        df2['label'] = df2['score'].apply(lambda x: 0 if x <= 2 else 1)
-        df2['clean_review'] = df2['content'].apply(clean_text)
-        df2['processed_review'] = df2['clean_review'].apply(preprocess_text)
+        with open(path2, 'rb') as f:
+            m2 = pickle.load(f)
 
-        results = {}
-        for name, df, text_col in [("Dataset 1", df1, 'processed_review'), ("Dataset 2", df2, 'processed_review')]:
-            X = df[text_col]
-            y = df['label']
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
-
-            tfidf = TfidfVectorizer(max_features=5000, ngram_range=(1,2))
-            X_train_tfidf = tfidf.fit_transform(X_train)
-            X_test_tfidf = tfidf.transform(X_test)
-
-            ratio = y.value_counts(normalize=True).sort_index().values
-            nb = MultinomialNB(class_prior=ratio)
-            nb.fit(X_train_tfidf, y_train)
-            y_pred_nb = nb.predict(X_test_tfidf)
-
-            lr = LogisticRegression(max_iter=1000, class_weight='balanced')
-            lr.fit(X_train_tfidf, y_train)
-            y_pred_lr = lr.predict(X_test_tfidf)
-
-            results[name] = {
-                'tfidf': tfidf, 'nb': nb, 'lr': lr,
-                'y_test': y_test, 'y_pred_nb': y_pred_nb, 'y_pred_lr': y_pred_lr,
-                'df': df,
-                'metrics': {
-                    'nb': {
-                        'acc': accuracy_score(y_test, y_pred_nb),
-                        'prec': precision_score(y_test, y_pred_nb, zero_division=0),
-                        'rec': recall_score(y_test, y_pred_nb, zero_division=0),
-                        'f1': f1_score(y_test, y_pred_nb, zero_division=0),
-                    },
-                    'lr': {
-                        'acc': accuracy_score(y_test, y_pred_lr),
-                        'prec': precision_score(y_test, y_pred_lr, zero_division=0),
-                        'rec': recall_score(y_test, y_pred_lr, zero_division=0),
-                        'f1': f1_score(y_test, y_pred_lr, zero_division=0),
-                    }
-                }
-            }
-
+        results = {
+            "Dataset 1": {
+                'tfidf': m1['tfidf'],
+                'nb':    m1['nb'],
+                'lr':    m1['lr'],
+                'svm':   m1['svm'],
+                'rf':    m1['rf'],
+                'acc':   m1['acc'],  # dict: nb, lr, svm, rf
+            },
+            "Dataset 2": {
+                'tfidf': m2['tfidf'],
+                'nb':    m2['nb'],
+                'lr':    m2['lr'],
+                'svm':   m2['svm'],
+                'rf':    m2['rf'],
+                'acc':   m2['acc'],
+            },
+        }
         return results, None
 
     except Exception as e:
         return None, str(e)
 
-# HERO 
+# ── HERO ─────────────────────────────────────────────────────────────────────
 st.markdown("""
 <div class="hero">
     <h1>Sentiment Analyzer ✨</h1>
@@ -349,17 +329,17 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-with st.spinner("Training models..."):
-    results, error = load_and_train()
+with st.spinner("Memuat model..."):
+    results, error = load_models()
 
 if error:
-    st.error(error)
+    st.error(f"Gagal memuat model: {error}")
     st.stop()
 
-# TABS 
-tab1, tab2 = st.tabs(["🪄 Prediksi  ", "📊 Performa Model & Dataset"])
+# ── TABS ──────────────────────────────────────────────────────────────────────
+tab1, tab2 = st.tabs(["🪄 Prediksi  ", "📊 Performa Model"])
 
-# TAB 1
+# ── TAB 1 : PREDIKSI ─────────────────────────────────────────────────────────
 with tab1:
     st.markdown('<div class="section-title">Coba Analisis Sentimen</div>', unsafe_allow_html=True)
 
@@ -378,23 +358,28 @@ with tab1:
 
     if predict_btn and user_input.strip():
         r = results[dataset_choice]
-        nb_pred = predict_sentiment(user_input, r['nb'], r['tfidf'])
-        lr_pred = predict_sentiment(user_input, r['lr'], r['tfidf'])
+        nb_pred  = predict_sentiment(user_input, r['nb'],  r['tfidf'])
+        lr_pred  = predict_sentiment(user_input, r['lr'],  r['tfidf'])
+        svm_pred = predict_sentiment(user_input, r['svm'], r['tfidf'])
+        rf_pred  = predict_sentiment(user_input, r['rf'],  r['tfidf'])
+
         c1, c2 = st.columns(2)
-        with c1:
-            css = "predict-positive" if nb_pred == "positive" else "predict-negative"
-            icon = "✅" if nb_pred == "positive" else "❌"
-            st.markdown(f'''<div class="{css}">
-                <div class="predict-label">{icon} Naive Bayes</div>
-                <div class="predict-result">{nb_pred.upper()}</div>
-            </div>''', unsafe_allow_html=True)
-        with c2:
-            css = "predict-positive" if lr_pred == "positive" else "predict-negative"
-            icon = "✅" if lr_pred == "positive" else "❌"
-            st.markdown(f'''<div class="{css}">
-                <div class="predict-label">{icon} Logistic Regression</div>
-                <div class="predict-result">{lr_pred.upper()}</div>
-            </div>''', unsafe_allow_html=True)
+        c3, c4 = st.columns(2)
+
+        for col, label, pred, icon_key in [
+            (c1, "Naive Bayes",         nb_pred,  "NB"),
+            (c2, "Logistic Regression", lr_pred,  "LR"),
+            (c3, "SVM",                 svm_pred, "SVM"),
+            (c4, "Random Forest",       rf_pred,  "RF"),
+        ]:
+            css  = "predict-positive" if pred == "positive" else "predict-negative"
+            icon = "✅" if pred == "positive" else "❌"
+            with col:
+                st.markdown(f'''<div class="{css}">
+                    <div class="predict-label">{icon} {label}</div>
+                    <div class="predict-result">{pred.upper()}</div>
+                </div>''', unsafe_allow_html=True)
+
     elif predict_btn:
         st.warning("Masukkan review terlebih dahulu!")
 
@@ -402,7 +387,7 @@ with tab1:
     examples = [
         ("✅ Positif", "Cepat dapat driver dan perjalanan lancar, sejauh ini puas pakainya!"),
         ("❌ Negatif", "Aplikasi sering error, driver tidak mau jemput, sangat mengecewakan"),
-        ("⚠️ Mixed", "Harga terjangkau tapi aplikasi lambat dan sering lag"),
+        ("⚠️ Mixed",  "Harga terjangkau tapi aplikasi lambat dan sering lag"),
     ]
 
     cols = st.columns(3)
@@ -415,50 +400,67 @@ with tab1:
             </div>
             """, unsafe_allow_html=True)
 
-# TAB 2
+# ── TAB 2 : PERFORMA MODEL ───────────────────────────────────────────────────
 with tab2:
-    col1, col2 = st.columns(2)
-    for col, ds_name in zip([col1, col2], ["Dataset 1", "Dataset 2"]):
-        with col:
-            df = results[ds_name]['df']
-            total = len(df)
-            pos = (df['label'] == 1).sum()
-            neg = (df['label'] == 0).sum()
-            st.markdown(f"""
-            <div class="card">
-                <div style="font-weight:700;font-size:1rem;margin-bottom:1rem;color:#1A1A2E;">{ds_name}</div>
-                <div style="display:flex;gap:1rem;justify-content:space-around;text-align:center;">
-                    <div>
-                        <div style="font-size:1.5rem;font-weight:800;color:#1A1A2E;">{total:,}</div>
-                        <div style="color:#888;font-size:0.75rem;">Total Reviews</div>
-                    </div>
-                    <div>
-                        <div style="font-size:1.5rem;font-weight:800;color:#00AA5B;">{pos:,}</div>
-                        <div style="color:#888;font-size:0.75rem;">Positive</div>
-                    </div>
-                    <div>
-                        <div style="font-size:1.5rem;font-weight:800;color:#FF6B35;">{neg:,}</div>
-                        <div style="color:#888;font-size:0.75rem;">Negative</div>
-                    </div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-    st.markdown('<hr style="margin-top:-1rem;margin-bottom:1rem;border:none;border-top:1px solid #ddd;">', unsafe_allow_html=True)
-
     ds_select = st.radio("Pilih Dataset:", ["Dataset 1", "Dataset 2"], horizontal=True)
     r = results[ds_select]
+    acc = r['acc']  # {'nb': float, 'lr': float, 'svm': float, 'rf': float}
 
-    st.markdown('<div class="section-title">Naive Bayes</div>', unsafe_allow_html=True)
-    c1, c2, c3, c4 = st.columns(4)
-    m = r['metrics']['nb']
-    for col, label, val in zip([c1,c2,c3,c4], ["Accuracy","Precision","Recall","F1-Score"], [m['acc'],m['prec'],m['rec'],m['f1']]):
-        with col:
-            st.markdown(f'<div class="metric-box"><div class="metric-label">{label}</div><div class="metric-value">{val:.2%}</div></div>', unsafe_allow_html=True)
+    model_configs = [
+        ("Naive Bayes",         "nb",  "#00AA5B", "metric-value"),
+        ("Logistic Regression", "lr",  "#FF6B35", "metric-value-orange"),
+        ("SVM",                 "svm", "#7C3AED", "metric-value-purple"),
+        ("Random Forest",       "rf",  "#0284C7", "metric-value-blue"),
+    ]
 
-    st.markdown('<div class="section-title" style="margin-top:1.5rem;border-left-color:#FF6B35;">Logistic Regression</div>', unsafe_allow_html=True)
-    c1, c2, c3, c4 = st.columns(4)
-    m = r['metrics']['lr']
-    for col, label, val in zip([c1,c2,c3,c4], ["Accuracy","Precision","Recall","F1-Score"], [m['acc'],m['prec'],m['rec'],m['f1']]):
+    st.markdown('<div class="section-title" style="margin-top:0.5rem;">Akurasi Model</div>', unsafe_allow_html=True)
+
+    cols = st.columns(4)
+    for col, (name, key, color, css_class) in zip(cols, model_configs):
+        val = acc.get(key, 0)
         with col:
-            st.markdown(f'<div class="metric-box" style="border-top-color:#FF6B35;"><div class="metric-label">{label}</div><div class="metric-value-orange">{val:.2%}</div></div>', unsafe_allow_html=True)
+            st.markdown(f'''
+            <div class="metric-box" style="border-top-color:{color};">
+                <div class="metric-label">{name}</div>
+                <div class="{css_class}">{val:.2%}</div>
+            </div>
+            ''', unsafe_allow_html=True)
+
+    st.markdown('<hr style="margin-top:1.5rem;margin-bottom:1.5rem;border:none;border-top:1px solid #ddd;">', unsafe_allow_html=True)
+
+    # Accuracy bar chart
+    st.markdown('<div class="section-title">Perbandingan Akurasi</div>', unsafe_allow_html=True)
+
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    labels = ["Naive Bayes", "Logistic\nRegression", "SVM", "Random\nForest"]
+    values = [acc.get(k, 0) for k in ['nb', 'lr', 'svm', 'rf']]
+    colors = ["#00AA5B", "#FF6B35", "#7C3AED", "#0284C7"]
+
+    fig, ax = plt.subplots(figsize=(8, 3.5))
+    fig.patch.set_facecolor('white')
+    ax.set_facecolor('white')
+
+    bars = ax.bar(labels, values, color=colors, width=0.5, edgecolor='none', zorder=3)
+    for bar, val in zip(bars, values):
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() + 0.005,
+            f"{val:.2%}",
+            ha='center', va='bottom',
+            fontsize=10, fontweight='bold', color='#1A1A2E'
+        )
+
+    ax.set_ylim(0, 1.12)
+    ax.set_ylabel("Accuracy", fontsize=10, color='#555')
+    ax.tick_params(colors='#555')
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_color('#ddd')
+    ax.spines['bottom'].set_color('#ddd')
+    ax.yaxis.grid(True, color='#eee', zorder=0)
+    ax.set_axisbelow(True)
+    plt.tight_layout()
+    st.pyplot(fig)
+    plt.close()
