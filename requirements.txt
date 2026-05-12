@@ -1,8 +1,7 @@
 streamlit
 pandas
+numpy
+matplotlib
 nltk
 scikit-learn
-matplotlib
-numpy
-requests
 gdown
