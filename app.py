@@ -287,30 +287,40 @@ def load_and_train():
         # DATASET 1
         file_id_1 = "1f0OBJGZNhmIUMMqBNOYQOexZrh7XUSkp"
         path1 = "dataset1_gojek.csv"
-
+        
         if not os.path.exists(path1):
-            gdown.download(id=file_id_1, output=path1, quiet=False)
-
-        df1 = pd.read_csv(
-            path1,
-            encoding='latin1',
-            on_bad_lines='skip'
-        ).dropna().drop_duplicates()
-
+            gdown.download(
+                f"https://drive.google.com/uc?export=download&id={file_id_1}",
+                path1,
+                quiet=False,
+                fuzzy=True
+            )
+        
         # DATASET 2
         file_id_2 = "1fo2n7JHmS8WavNCbOAyUSVlIu4bo3wHF"
         path2 = "dataset2_gojek.csv"
-
+        
         if not os.path.exists(path2):
-            gdown.download(id=file_id_2, output=path2, quiet=False)
+            gdown.download(
+                f"https://drive.google.com/uc?export=download&id={file_id_2}",
+                path2,
+                quiet=False,
+                fuzzy=True
+            )
 
+        df1 = pd.read_csv(
+            path1,
+            engine='python',
+            encoding='utf-8',
+            on_bad_lines='skip'
+        ).dropna().drop_duplicates()
+        
         df2 = pd.read_csv(
             path2,
-            encoding='latin1',
+            engine='python',
+            encoding='utf-8',
             on_bad_lines='skip'
         )
-
-        df2.columns = df2.columns.str.strip()
 
         results = {}
         for name, df, text_col in [("Dataset 1", df1, 'processed_review'), ("Dataset 2", df2, 'processed_review')]:
