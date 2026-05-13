@@ -1,7 +1,7 @@
 streamlit
 pandas
 numpy
-matplotlib
 nltk
-scikit-learn==1.6.1
+matplotlib
+scikit-learn
 gdown
