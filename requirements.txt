@@ -1,7 +1,8 @@
-streamlit
-pandas
-numpy
-nltk
-matplotlib
-gdown
-scikit-learn
+streamlit==1.57.0
+pandas==2.3.1
+numpy==2.3.2
+scikit-learn==1.6.1
+nltk==3.9.1
+gdown==5.2.0
+matplotlib==3.10.5
+joblib==1.5.1
