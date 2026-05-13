@@ -2,6 +2,6 @@ streamlit
 pandas
 numpy
 nltk
-matplotlib
-scikit-learn
 gdown
+joblib
+scikit-learn
