@@ -289,36 +289,28 @@ def load_and_train():
         path1 = "dataset1_gojek.csv"
         
         if not os.path.exists(path1):
-            gdown.download(
-                f"https://drive.google.com/uc?export=download&id={file_id_1}",
-                path1,
-                quiet=False,
-                fuzzy=True
-            )
+            url1 = f"https://drive.google.com/uc?id={file_id_1}"
+            gdown.download(url1, path1, quiet=False)
         
         # DATASET 2
         file_id_2 = "1fo2n7JHmS8WavNCbOAyUSVlIu4bo3wHF"
         path2 = "dataset2_gojek.csv"
         
         if not os.path.exists(path2):
-            gdown.download(
-                f"https://drive.google.com/uc?export=download&id={file_id_2}",
-                path2,
-                quiet=False,
-                fuzzy=True
-            )
-
+            url2 = f"https://drive.google.com/uc?id={file_id_2}"
+            gdown.download(url2, path2, quiet=False)
+        
         df1 = pd.read_csv(
             path1,
             engine='python',
-            encoding='utf-8',
+            encoding='latin1',
             on_bad_lines='skip'
         ).dropna().drop_duplicates()
         
         df2 = pd.read_csv(
             path2,
             engine='python',
-            encoding='utf-8',
+            encoding='latin1',
             on_bad_lines='skip'
         )
 
