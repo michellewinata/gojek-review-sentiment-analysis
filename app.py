@@ -292,7 +292,7 @@ def load_and_train():
             url1 = f"https://drive.google.com/uc?id={file_id_1}"
             gdown.download(url1, path1, quiet=False)
 
-        df1 = pd.read_csv(path1).dropna().drop_duplicates()
+        df1 = pd.read_csv(path1, encoding_errors='ignore').dropna().drop_duplicates()
         df1['clean_review'] = df1['review'].apply(clean_text)
         df1['processed_review'] = df1['clean_review'].apply(preprocess_text)
         df1['label'] = df1['rate'].map({'positive': 1, 'negative': 0})
@@ -305,7 +305,7 @@ def load_and_train():
             url2 = f"https://drive.google.com/uc?id={file_id_2}"
             gdown.download(url2, path2, quiet=False)
     
-        df2 = pd.read_csv(path2)
+        df2 = pd.read_csv(path2, encoding_errors='ignore')
         df2.columns = df2.columns.str.strip()
 
         df2 = df2[df2['score'] != 3]
