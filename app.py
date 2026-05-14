@@ -15,7 +15,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.linear_model import LogisticRegression
-from sklearn.svm import LinearSVC
+from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, f1_score
@@ -358,7 +358,7 @@ def load_and_train():
 
             nb  = _get_or_train('nb',  MultinomialNB(class_prior=ratio))
             lr  = _get_or_train('lr',  LogisticRegression(max_iter=1000, class_weight='balanced'))
-            svm = _get_or_train('svm', LinearSVC(max_iter=2000, class_weight='balanced'))
+            svm = _get_or_train('svm', SVC(kernel='linear', class_weight='balanced', random_state=42))
             rf  = _get_or_train('rf',  RandomForestClassifier(
                                             n_estimators=200,
                                             class_weight='balanced',
