@@ -7,6 +7,7 @@ import nltk
 nltk.download('stopwords')
 nltk.download('punkt')
 nltk.download('punkt_tab')
+from nltk.corpus import stopwords
 import numpy as np
 import gdown
 import pickle
