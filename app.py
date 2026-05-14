@@ -277,7 +277,7 @@ def load_and_train():
         model_configs = {
             "Dataset 1": {
                 "model_id":   "1f0OBJGZNhmIUMMqBNOYQOexZrh7XUSkp",
-                "model_path": "model1_gojek.pkl",
+                "model_path": "models_ds1.pkl",
                 "csv_id":     "1zWjvbR4WBEMZ7Gipz9nbQ26cSLuW8hi3",
                 "csv_path":   "dataset1_gojek.csv",
                 "text_col":   "review",
@@ -286,7 +286,7 @@ def load_and_train():
             },
             "Dataset 2": {
                 "model_id":   "1fo2n7JHmS8WavNCbOAyUSVlIu4bo3wHF",
-                "model_path": "model2_gojek.pkl",
+                "model_path": "models_ds2.pkl",
                 "csv_id":     "1URNmAxxjCzuYvRDnl6FLOtNbjZ9uIS2R",
                 "csv_path":   "dataset2_gojek.csv",
                 "text_col":   "content",
