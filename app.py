@@ -267,31 +267,25 @@ def predict_sentiment(text, model, tfidf):
 # ── LOAD / TRAIN ──────────────────────────────────────────────────────────────
 @st.cache_data
 def load_and_train():
-    """
-    Tries to load pre-trained models from Google Drive (.pkl).
-    If the pkl contains a full bundle (tfidf + models + metrics), uses them.
-    Otherwise falls back to training from CSV datasets.
-    """
     try:
-        # ── Drive model files ──────────────────────────────────────────────
         model_configs = {
             "Dataset 1": {
-                "model_id":   "1f0OBJGZNhmIUMMqBNOYQOexZrh7XUSkp",
+                "model_id":  "1f0OBJGZNhmIUMMqBNOYQOexZrh7XUSkp",
                 "model_path": "models_ds1.pkl",
-                "csv_id":     "1zWjvbR4WBEMZ7Gipz9nbQ26cSLuW8hi3",
-                "csv_path":   "dataset1_gojek.csv",
-                "text_col":   "review",
-                "label_col":  "rate",
-                "label_map":  {"positive": 1, "negative": 0},
+                "csv_id":    "1zWjvbR4WBEMZ7Gipz9nbQ26cSLuW8hi3",
+                "csv_path":  "dataset1_gojek.csv",
+                "text_col":  "review",
+                "label_col": "rate",
+                "label_map": {"positive": 1, "negative": 0},
             },
             "Dataset 2": {
-                "model_id":   "1fo2n7JHmS8WavNCbOAyUSVlIu4bo3wHF",
+                "model_id":  "1fo2n7JHmS8WavNCbOAyUSVlIu4bo3wHF",
                 "model_path": "models_ds2.pkl",
-                "csv_id":     "1URNmAxxjCzuYvRDnl6FLOtNbjZ9uIS2R",
-                "csv_path":   "dataset2_gojek.csv",
-                "text_col":   "content",
-                "label_col":  "score",
-                "label_map":  None,            # numeric → handled below
+                "csv_id":    "1URNmAxxjCzuYvRDnl6FLOtNbjZ9uIS2R",
+                "csv_path":  "dataset2_gojek.csv",
+                "text_col":  "content",
+                "label_col": "score",
+                "label_map": None,
             },
         }
 
@@ -299,23 +293,24 @@ def load_and_train():
 
         for ds_name, cfg in model_configs.items():
 
-            # ── 1. Try loading pre-trained pkl ─────────────────────────────
+            # Load pkl — langsung error kalau ga ada
             pkl_path = cfg["model_path"]
-            bundle   = None
-
             if not os.path.exists(pkl_path):
-                url = f"https://drive.google.com/uc?id={cfg['model_id']}"
-                gdown.download(url, pkl_path, quiet=False)
+                gdown.download(f"https://drive.google.com/uc?id={cfg['model_id']}", pkl_path, quiet=False)
+            if not os.path.exists(pkl_path):
+                raise FileNotFoundError(f"Model {ds_name} tidak ditemukan: {pkl_path}")
 
-            if os.path.exists(pkl_path):
-                with open(pkl_path, "rb") as f:
-                    bundle = pickle.load(f)
+            with open(pkl_path, "rb") as f:
+                bundle = pickle.load(f)
 
-            # ── 2. Load CSV (needed for stats & fallback training) ──────────
+            for key in ['nb', 'lr', 'svm', 'rf', 'tfidf']:
+                if key not in bundle:
+                    raise KeyError(f"Bundle {ds_name} tidak punya key '{key}'")
+
+            # Load CSV untuk statistik dataset saja
             csv_path = cfg["csv_path"]
             if not os.path.exists(csv_path):
-                url = f"https://drive.google.com/uc?id={cfg['csv_id']}"
-                gdown.download(url, csv_path, quiet=False)
+                gdown.download(f"https://drive.google.com/uc?id={cfg['csv_id']}", csv_path, quiet=False)
 
             df = pd.read_csv(csv_path).dropna().drop_duplicates()
             df.columns = df.columns.str.strip()
@@ -326,75 +321,15 @@ def load_and_train():
                 df = df[df['score'] != 3]
                 df['label'] = df['score'].apply(lambda x: 0 if x <= 2 else 1)
 
-            df['clean_review']     = df[cfg["text_col"]].apply(clean_text)
-            df['processed_review'] = df['clean_review'].apply(preprocess_text)
-            df = df.dropna(subset=['label', 'processed_review'])
-
-            X = df['processed_review']
-            y = df['label'].astype(int)
-            X_train, X_test, y_train, y_test = train_test_split(
-                X, y, test_size=0.2, random_state=42, stratify=y
-            )
-
-            # ── 3. Resolve tfidf ───────────────────────────────────────────
-            if isinstance(bundle, dict) and 'tfidf' in bundle:
-                tfidf = bundle['tfidf']
-            else:
-                tfidf = TfidfVectorizer(max_features=5000, ngram_range=(1, 2))
-                tfidf.fit(X_train)
-
-            X_train_tfidf = tfidf.transform(X_train)
-            X_test_tfidf  = tfidf.transform(X_test)
-
-            # ── 4. Resolve / train each model ──────────────────────────────
-            def _get_or_train(key, estimator):
-                """Return model from bundle if present, else train estimator."""
-                if isinstance(bundle, dict) and key in bundle:
-                    return bundle[key]
-                estimator.fit(X_train_tfidf, y_train)
-                return estimator
-
-            ratio = y.value_counts(normalize=True).sort_index().values
-
-            nb  = _get_or_train('nb',  MultinomialNB(class_prior=ratio))
-            lr  = _get_or_train('lr',  LogisticRegression(max_iter=1000, class_weight='balanced'))
-            svm = _get_or_train('svm', SVC(kernel='linear', class_weight='balanced', random_state=42))
-            rf  = _get_or_train('rf',  RandomForestClassifier(
-                                            n_estimators=200,
-                                            class_weight='balanced',
-                                            random_state=42,
-                                            n_jobs=-1,
-                                        ))
-
-            # ── 5. Predictions ─────────────────────────────────────────────
-            y_pred_nb  = nb.predict(X_test_tfidf)
-            y_pred_lr  = lr.predict(X_test_tfidf)
-            y_pred_svm = svm.predict(X_test_tfidf)
-            y_pred_rf  = rf.predict(X_test_tfidf)
-
-            def _metrics(y_pred):
-                return {
-                    'acc':  accuracy_score(y_test, y_pred),
-                    'prec': precision_score(y_test, y_pred, zero_division=0),
-                    'rec':  recall_score(y_test, y_pred, zero_division=0),
-                    'f1':   f1_score(y_test, y_pred, zero_division=0),
-                }
-
+            # Metrics langsung dari bundle
             results[ds_name] = {
-                'tfidf': tfidf,
-                'nb': nb, 'lr': lr, 'svm': svm, 'rf': rf,
-                'y_test': y_test,
-                'y_pred_nb':  y_pred_nb,
-                'y_pred_lr':  y_pred_lr,
-                'y_pred_svm': y_pred_svm,
-                'y_pred_rf':  y_pred_rf,
-                'df': df,
-                'metrics': {
-                    'nb':  _metrics(y_pred_nb),
-                    'lr':  _metrics(y_pred_lr),
-                    'svm': _metrics(y_pred_svm),
-                    'rf':  _metrics(y_pred_rf),
-                },
+                'tfidf':  bundle['tfidf'],
+                'nb':     bundle['nb'],
+                'lr':     bundle['lr'],
+                'svm':    bundle['svm'],
+                'rf':     bundle['rf'],
+                'df':     df,
+                'metrics': bundle['metrics'],
             }
 
         return results, None
