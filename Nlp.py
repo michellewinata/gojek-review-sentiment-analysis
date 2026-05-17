@@ -106,7 +106,7 @@ svm = SVC(kernel='linear', class_weight='balanced', random_state=42)
 svm.fit(X_train_tfidf, y_train)
 y_pred_svm = svm.predict(X_test_tfidf)
 
-rf = RandomForestClassifier(n_estimators=200, class_weight='balanced', random_state=42, n_jobs=-1)
+rf = RandomForestClassifier(n_estimators=50, class_weight='balanced', random_state=42, n_jobs=-1)
 rf.fit(X_train_tfidf, y_train)
 y_pred_rf = rf.predict(X_test_tfidf)
 
@@ -214,7 +214,7 @@ svm = SVC(kernel='linear', class_weight='balanced', random_state=42)
 svm.fit(X_train_tfidf, y_train)
 y_pred_svm = svm.predict(X_test_tfidf)
 
-rf = RandomForestClassifier(n_estimators=200, class_weight='balanced', random_state=42, n_jobs=-1)
+rf = RandomForestClassifier(n_estimators=50, class_weight='balanced', random_state=42, n_jobs=-1)
 rf.fit(X_train_tfidf, y_train)
 y_pred_rf = rf.predict(X_test_tfidf)
 
