@@ -9,7 +9,7 @@ Fokus utama proyek adalah membandingkan performa model (Naive Bayes, Logistic Re
 ## 🎯 Tujuan
 - Klasifikasi sentimen (positif & negatif)  
 - Membandingkan performa model  
-- Melihat pengaruh ukuran & pelabelan data  
+- Melihat pengaruh ukuran dataset
 
 ---
 
