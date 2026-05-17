@@ -2,7 +2,7 @@
 
 ## 📌 Deskripsi
 Proyek ini menganalisis sentimen ulasan pengguna aplikasi Gojek menggunakan **Natural Language Processing (NLP)**.  
-Fokus utama proyek adalah membandingkan performa model pada dua dataset dengan karakteristik berbeda (dataset kecil berlabel vs dataset besar tanpa label).
+Fokus utama proyek adalah membandingkan performa model (Naive Bayes, Logistic Regression, Support Vector Machine (SVM), dan Random Forest) pada dua dataset dengan karakteristik berbeda (dataset kecil berlabel vs dataset besar tanpa label).
 
 ---
 
